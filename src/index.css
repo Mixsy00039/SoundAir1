@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@layer base {
+  * {
+    border-color: rgba(226, 232, 240, 0.9);
+  }
+  html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply text-slate-800 antialiased;
+    line-height: 1.5;
+  }
+  /* Comfortable tap targets on mobile */
+  button, a, [role="button"] {
+    min-height: 36px;
+  }
+}
+
+/* Custom smooth bento light scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

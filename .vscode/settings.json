@@ -1,0 +1,9 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^npm run lint$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "npm install": true
+    }
+}

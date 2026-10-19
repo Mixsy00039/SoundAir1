@@ -1,0 +1,33 @@
+{
+  "name": "flood-monitor",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0 --port 4477",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0 --port 4477",
+    "clean": "node -e \"require('node:fs').rmSync('.next', { recursive: true, force: true })\"",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.546.0",
+    "motion": "^12.23.24",
+    "mqtt": "^5.15.2",
+    "mysql2": "^3.24.2",
+    "next": "^16.4.1",
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
+    "recharts": "^3.10.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.14",
+    "@types/leaflet": "^1.9.22",
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "tailwindcss": "^4.1.14",
+    "typescript": "~5.8.2"
+  }
+}
