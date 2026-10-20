@@ -41,30 +41,26 @@ services:
     image: eclipse-mosquitto:2
     restart: unless-stopped
     environment:
-      MQTT_USER: ${MQTT_USER:?Set MQTT_USER in .env}
-      MQTT_PASS: ${MQTT_PASS:?Set MQTT_PASS in .env}
-    command:
-      - /bin/sh
-      - -c
-      - |
-        printf '%s\n' "$$MQTT_PASS" "$$MQTT_PASS" |
-        mosquitto_passwd -c /mosquitto/data/passwordfile "$$MQTT_USER" &&
-        exec mosquitto -c /mosquitto/config/mosquitto.conf
+      MQTT_USER: ${MQTT_USER}
+      MQTT_PASS: ${MQTT_PASS}
+    entrypoint: ["/bin/sh", "-c"]
+    command: |
+      echo "=== Creating password file ==="
+      echo "User: $$MQTT_USER"
+      mosquitto_passwd -b -c /mosquitto/data/passwordfile "$$MQTT_USER" "$$MQTT_PASS"
+      echo "=== Password file created ==="
+      exec mosquitto -c /mosquitto/config/mosquitto.conf
     ports:
       - "1883:1883"
     volumes:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
       - mosquitto_data:/mosquitto/data
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "mosquitto_pub -h 127.0.0.1 -p 1883 -u \"$${MQTT_USER}\" -P \"$${MQTT_PASS}\" -t healthcheck -m ok -q 0",
-        ]
+      test: ["CMD-SHELL", "mosquitto_pub -h 127.0.0.1 -p 1883 -u \"$$MQTT_USER\" -P \"$$MQTT_PASS\" -t healthcheck -m ok -q 0 || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 5s
+      retries: 6
+      start_period: 15s
 
 volumes:
   mysql_data:
