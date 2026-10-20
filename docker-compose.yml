@@ -44,10 +44,10 @@ services:
       MQTT_USER: ${MQTT_USER:?Set MQTT_USER in .env}
       MQTT_PASS: ${MQTT_PASS:?Set MQTT_PASS in .env}
     entrypoint: ["/bin/sh", "-c"]
-    command: >
-      printf '%s\n%s\n' "$$MQTT_PASS" "$$MQTT_PASS"
-      | mosquitto_passwd -c /mosquitto/data/passwordfile "$$MQTT_USER"
-      && exec mosquitto -c /mosquitto/config/mosquitto.conf
+    command: |
+      printf '%s\n' "$$MQTT_PASS" "$$MQTT_PASS" |
+      mosquitto_passwd -c /mosquitto/data/passwordfile "$$MQTT_USER" &&
+      exec mosquitto -c /mosquitto/config/mosquitto.conf
     ports:
       - "1883:1883"
     volumes:
