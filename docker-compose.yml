@@ -5,6 +5,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      mosquitto:
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -15,6 +17,8 @@ services:
       DB_PASS: ${DB_PASS:?Set DB_PASS in .env}
       DB_NAME: ${DB_NAME:-gas_sound_db}
       DB_TABLE: ${DB_TABLE:-sensor_gas_sound}
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
     ports:
       - "4477:4477"
 
@@ -33,5 +37,33 @@ services:
       retries: 20
       start_period: 10s
 
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    environment:
+      MQTT_USER: ${MQTT_USER:?Set MQTT_USER in .env}
+      MQTT_PASS: ${MQTT_PASS:?Set MQTT_PASS in .env}
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      printf '%s\n%s\n' "$$MQTT_PASS" "$$MQTT_PASS"
+      | mosquitto_passwd -c /mosquitto/data/passwordfile "$$MQTT_USER"
+      && exec mosquitto -c /mosquitto/config/mosquitto.conf
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto_data:/mosquitto/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mosquitto_pub -h 127.0.0.1 -p 1883 -u \"$${MQTT_USER}\" -P \"$${MQTT_PASS}\" -t healthcheck -m ok -q 0",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
 volumes:
   mysql_data:
+  mosquitto_data:
