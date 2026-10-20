@@ -632,7 +632,13 @@ export default function App() {
             </div>
           </div>
           <div className="grid grid-cols-1 items-stretch gap-3 sm:gap-4 lg:grid-cols-[minmax(0,2.4fr)_minmax(300px,0.8fr)]">
-            <div className="order-1 lg:col-start-1 lg:row-start-2 lg:order-2">
+            <div className="order-first lg:col-span-2">
+              <OverviewBanner
+                nodes={nodes}
+                selectedNodeId={selectedNodeId}
+              />
+            </div>
+            <div className="order-2 min-w-0">
               <StationMap
                 nodes={nodes}
                 selectedNodeId={selectedNodeId}
@@ -640,18 +646,12 @@ export default function App() {
                 className="h-full"
               />
             </div>
-            <div className="order-2 lg:col-span-2 lg:order-1">
-              <OverviewBanner
-                nodes={nodes}
-                selectedNodeId={selectedNodeId}
-              />
-            </div>
-            <div className="order-3 lg:col-start-2 lg:row-start-2 lg:order-2">
+            <div className="order-3 min-w-0 lg:min-h-0">
               {nodes.length > 0 && (
                 <StationCard
                   selectedNode={selectedStation!}
                   sensorRanges={sensorRanges}
-                  className="lg:h-full lg:max-h-[calc(100vh-8rem)] overflow-y-auto"
+                  className="h-full"
                 />
               )}
             </div>

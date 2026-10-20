@@ -27,7 +27,7 @@ export const StationCard: React.FC<StationCardProps> = ({ selectedNode, sensorRa
   return (
     <div className={`flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm ${className}`}>
       <div className="h-1.5 w-full" style={{ backgroundColor: stationColor }} />
-      <div className="flex flex-col gap-3 p-3 sm:gap-4 sm:p-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 p-3 sm:gap-4 sm:p-4">
         <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">ช่วงเวลาที่เลือก</p>
@@ -35,11 +35,11 @@ export const StationCard: React.FC<StationCardProps> = ({ selectedNode, sensorRa
           </div>
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:min-h-0 lg:flex-1 lg:grid-cols-1 lg:grid-rows-4">
           {sensors.map(({ key, label, icon: Icon, unit, digits, iconClass }) => (
             <div
               key={key}
-              className="min-w-0 rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 sm:p-3"
+              className="flex min-w-0 flex-col justify-center rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 sm:p-3"
             >
               <div className="flex min-w-0 items-center gap-2">
                 <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconClass}`}>

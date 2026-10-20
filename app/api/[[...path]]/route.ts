@@ -13,6 +13,7 @@ import {
   sseClients,
   stopLiveTelemetrySimulator
 } from '../../../server/mqttService';
+import { initializeServices } from '../../../server/startup';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -70,6 +71,17 @@ function createStreamResponse() {
 export async function GET(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const search = request.nextUrl.searchParams;
+  const historyMatch = pathname.match(/^\/api\/history\/([^/]+)$/);
+  const needsServices = pathname === '/api/stream'
+    || pathname === '/api/live'
+    || pathname === '/api/nodes'
+    || historyMatch !== null
+    || pathname === '/api/history-all'
+    || pathname === '/api/rows'
+    || pathname === '/api/system/status'
+    || pathname === '/api/export/csv';
+
+  if (needsServices) await initializeServices();
 
   if (pathname === '/api/stream') return createStreamResponse();
   if (pathname === '/api/live') return NextResponse.json(getSnapshot());
@@ -94,7 +106,6 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const historyMatch = pathname.match(/^\/api\/history\/([^/]+)$/);
   if (historyMatch) {
     try {
       const nodeId = decodeURIComponent(historyMatch[1]);

@@ -69,13 +69,11 @@ services:
       MQTT_USER: ${MQTT_USER:?Set MQTT_USER in .env}
       MQTT_PASS: ${MQTT_PASS:?Set MQTT_PASS in .env}
     entrypoint: ["/bin/sh", "-c"]
-    command: |
-      set -eu
-      if [ -f /mosquitto/data/passwordfile ]; then
-        printf '%s\n%s\n' "$$MQTT_PASS" "$$MQTT_PASS" | mosquitto_passwd /mosquitto/data/passwordfile "$$MQTT_USER"
-      else
-        printf '%s\n%s\n' "$$MQTT_PASS" "$$MQTT_PASS" | mosquitto_passwd -c /mosquitto/data/passwordfile "$$MQTT_USER"
-      fi
+    command: >
+      set -eu;
+      rm -f /mosquitto/data/passwordfile;
+      mosquitto_passwd -b -c /mosquitto/data/passwordfile "$$MQTT_USER" "$$MQTT_PASS";
+      chown mosquitto:mosquitto /mosquitto/data/passwordfile;
       exec mosquitto -c /mosquitto/config/mosquitto.conf
     ports:
       - "8883:8883"
