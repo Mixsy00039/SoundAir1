@@ -23,6 +23,7 @@ const DB_USER = process.env.DB_USER || process.env.MYSQL_USER || 'root';
 const DB_PASS = process.env.DB_PASS || process.env.DB_PASSWORD || process.env.MYSQL_PASSWORD || process.env.MYSQL_PASS || '';
 const DB_NAME = process.env.DB_NAME || process.env.MYSQL_DATABASE || process.env.MYSQL_DB || 'gas_sound_db';
 const DB_TABLE = process.env.DB_TABLE || process.env.MYSQL_TABLE || 'sensor_gas_sound';
+const CREATE_DATABASE_IF_MISSING = process.env.NODE_ENV !== 'production';
 
 function quoteIdentifier(identifier: string): string {
   if (!/^[A-Za-z0-9_]+$/.test(identifier)) {
@@ -120,7 +121,7 @@ function createPool() {
 // No fake historical data seeded - only store and display real incoming data
 export async function initDatabase() {
   try {
-    await ensureDatabaseExists();
+    if (CREATE_DATABASE_IF_MISSING) await ensureDatabaseExists();
     pool = createPool();
 
     const conn = await pool.getConnection();
@@ -154,7 +155,10 @@ export async function initDatabase() {
   } catch (err: any) {
     isConnected = false;
     connectionError = err.message;
-    // Soft warning only — fallback is intentional when MySQL is unavailable (preview / local without DB)
+    if (process.env.NODE_ENV === 'production') {
+      console.error(`❌ [MySQL] Production startup requires a working database: ${err.message}`);
+      throw err;
+    }
     console.warn(`⚠️ [MySQL] ไม่สามารถเชื่อมต่อ MySQL ได้ (${err.message}). ระบบใช้ In-Memory Database ชั่วคราว (ข้อมูลจริงจาก MQTT ยังทำงานปกติ)`);
   }
 }
@@ -188,7 +192,7 @@ export async function ensureDbConnected(): Promise<boolean> {
       try { await pool.end(); } catch { /* ignore */ }
       pool = null;
     }
-    await ensureDatabaseExists();
+    if (CREATE_DATABASE_IF_MISSING) await ensureDatabaseExists();
     pool = createPool();
     const conn = await pool.getConnection();
     await conn.query(`
@@ -293,6 +297,10 @@ export async function insertSensorData(data: Record<string, any>): Promise<numbe
         }
       }
     }
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('MySQL is unavailable; refusing to store telemetry in memory in production');
   }
 
   // Fallback to Memory only if MySQL truly unavailable

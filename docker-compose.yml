@@ -2,32 +2,52 @@ services:
   app:
     build: .
     restart: unless-stopped
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     depends_on:
       mysql:
         condition: service_healthy
       mosquitto:
         condition: service_healthy
-    env_file:
-      - .env
     environment:
       NODE_ENV: production
       DB_HOST: mysql
       DB_PORT: "3306"
-      DB_USER: root
+      DB_USER: ${DB_USER:-soundair_app}
       DB_PASS: ${DB_PASS:?Set DB_PASS in .env}
       DB_NAME: ${DB_NAME:-gas_sound_db}
       DB_TABLE: ${DB_TABLE:-sensor_gas_sound}
       MQTT_HOST: mosquitto
       MQTT_PORT: "1883"
+      MQTT_USER: ${MQTT_USER:?Set MQTT_USER in .env}
+      MQTT_PASS: ${MQTT_PASS:?Set MQTT_PASS in .env}
+      MQTT_TOPIC: ${MQTT_TOPIC:-sensors/data/lora}
+      MQTT_TOPICS: ${MQTT_TOPICS:-sensors/data/lora,sensors/data/wifi,sensors/data/lora/raw,sensor/gateway/status}
     ports:
-      - "4477:4477"
+      - "127.0.0.1:${APP_PORT:-4477}:4477"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4477/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   mysql:
     image: mysql:8.4
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASS:?Set DB_PASS in .env}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS:?Set DB_ROOT_PASS in .env}
       MYSQL_DATABASE: ${DB_NAME:-gas_sound_db}
+      MYSQL_USER: ${DB_USER:-soundair_app}
+      MYSQL_PASSWORD: ${DB_PASS:?Set DB_PASS in .env}
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -36,24 +56,32 @@ services:
       timeout: 5s
       retries: 20
       start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   mosquitto:
     image: eclipse-mosquitto:2
     restart: unless-stopped
     environment:
-      MQTT_USER: ${MQTT_USER}
-      MQTT_PASS: ${MQTT_PASS}
+      MQTT_USER: ${MQTT_USER:?Set MQTT_USER in .env}
+      MQTT_PASS: ${MQTT_PASS:?Set MQTT_PASS in .env}
     entrypoint: ["/bin/sh", "-c"]
     command: |
-      echo "=== Creating password file ==="
-      echo "User: $$MQTT_USER"
-      mosquitto_passwd -b -c /mosquitto/data/passwordfile "$$MQTT_USER" "$$MQTT_PASS"
-      echo "=== Password file created ==="
+      set -eu
+      if [ -f /mosquitto/data/passwordfile ]; then
+        printf '%s\n%s\n' "$$MQTT_PASS" "$$MQTT_PASS" | mosquitto_passwd /mosquitto/data/passwordfile "$$MQTT_USER"
+      else
+        printf '%s\n%s\n' "$$MQTT_PASS" "$$MQTT_PASS" | mosquitto_passwd -c /mosquitto/data/passwordfile "$$MQTT_USER"
+      fi
       exec mosquitto -c /mosquitto/config/mosquitto.conf
     ports:
-      - "1883:1883"
+      - "8883:8883"
     volumes:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/certs:/mosquitto/certs:ro
       - mosquitto_data:/mosquitto/data
     healthcheck:
       test: ["CMD-SHELL", "mosquitto_pub -h 127.0.0.1 -p 1883 -u \"$$MQTT_USER\" -P \"$$MQTT_PASS\" -t healthcheck -m ok -q 0 || exit 1"]
@@ -61,6 +89,11 @@ services:
       timeout: 5s
       retries: 6
       start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   mysql_data:
