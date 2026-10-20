@@ -31,10 +31,10 @@
 
 ต้องติดตั้ง Docker พร้อม Compose plugin
 
-1. คัดลอก `.env.docker.example` เป็น `.env` และตั้งรหัสผ่านฐานข้อมูล รวมถึง `MQTT_USER` และ `MQTT_PASS` ที่ปลอดภัย
+1. คัดลอก `.env.docker.example` เป็น `.env` และตั้งรหัสผ่านฐานข้อมูลและ MQTT ที่ปลอดภัย
 2. สร้างและเริ่มระบบ: `docker compose up --build -d`
 3. เปิด `http://localhost:4477`
 
-Mosquitto จะเปิดพอร์ต `1883` สำหรับอุปกรณ์ที่เชื่อมจาก host และแอปใน Compose จะเชื่อม broker ผ่านชื่อ service `mosquitto` ใช้ `MQTT_USER`/`MQTT_PASS` ชุดเดียวกันทั้ง broker และแอป ส่วนแอปที่รันนอก Docker ให้ใช้ `MQTT_HOST=localhost` ข้อมูล MySQL และ Mosquitto เก็บใน volumes `mysql_data` และ `mosquitto_data`
+Compose จะเริ่ม Eclipse Mosquitto และแอปจะเชื่อมต่อ broker ผ่านชื่อ service `mosquitto` ที่พอร์ต `1883` ส่วนอุปกรณ์ที่เชื่อมต่อจากเครื่อง host ใช้พอร์ต `1883` และค่า `MQTT_USER`/`MQTT_PASS` ใน `.env` เดียวกัน พอร์ตนี้ไม่เข้ารหัส จึงไม่ควรเปิดให้เข้าถึงจากอินเทอร์เน็ตโดยตรง ข้อมูล MySQL และข้อความ MQTT เก็บใน volumes `mysql_data` และ `mosquitto_data`
 
 หยุดระบบด้วย `docker compose down`
